@@ -1,12 +1,12 @@
-use std::env;
+use clap::Parser;
 use dotenv::dotenv;
 use log::{debug, error, info, trace, warn};
-use clap::Parser;
+use rand::Rng;
+use std::env;
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::thread;
 use std::time::{Duration, Instant};
-use std::fs::{OpenOptions};
-use std::io::{Write};
-use rand::Rng;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -33,7 +33,7 @@ impl From<Args> for Config {
 
 fn cpu_test(duration: u64) {
     if duration == 0 {
-        return
+        return;
     }
     let target_iterations_per_sec = 1_000_000; // Fixed workload
     let start = Instant::now();
@@ -62,13 +62,17 @@ fn cpu_test(duration: u64) {
 
 fn disk_io_test(file_path: &str, duration: u64) {
     if duration == 0 {
-        return
+        return;
     }
     let start = Instant::now();
     let buffer_size = 1024 * 1024; // 1 MB buffer
     let target_writes_per_sec = 10; // Fixed workload
 
-    let mut file = OpenOptions::new().write(true).create(true).open(file_path).unwrap();
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(file_path)
+        .unwrap();
 
     while start.elapsed().as_secs() < duration {
         let iteration_start = Instant::now();
@@ -91,7 +95,7 @@ fn disk_io_test(file_path: &str, duration: u64) {
 
 fn ram_test(duration: u64, size_mb: usize) {
     if duration == 0 {
-        return
+        return;
     }
     let target_allocations_per_sec = 10; // Fixed workload
     let buffer_size = size_mb * 1024 * 1024;
@@ -112,25 +116,30 @@ fn ram_test(duration: u64, size_mb: usize) {
             thread::sleep(Duration::from_secs(1) - elapsed);
         } else {
             error!("RAM Test too long, does not fit in one second");
-
         }
     }
 }
 
 fn gpu_test(duration: u64) {
     // Placeholder for a GPU test using wgpu or other libraries
-    info!("GPU test started for {} seconds. (Implement as needed)", duration);
+    info!(
+        "GPU test started for {} seconds. (Implement as needed)",
+        duration
+    );
     thread::sleep(Duration::from_secs(duration));
 }
 
 fn main() {
-    dotenv().ok();
     let args = Args::parse();
     let config: Config = args.into();
-    env_logger::init();
 
+    dotenv().ok();
     if config.verbose {
-        std::env::set_var("RUST_LOG", "debug");
+        env_logger::builder()
+            .filter_level(log::LevelFilter::Debug)
+            .init();
+    } else {
+        env_logger::init();
     }
 
     let cpu_duration = config.cpu_secs;
