@@ -1,6 +1,8 @@
+use std::env;
+use dotenv::dotenv;
+use log::{debug, error, info, trace, warn};
 use clap::Parser;
 use std::thread;
-use std::env;
 use std::time::{Duration, Instant};
 use std::fs::{OpenOptions};
 use std::io::{Write};
@@ -29,7 +31,7 @@ impl From<Args> for Config {
     }
 }
 
-fn cpu_test(config: Config, duration: u64) {
+fn cpu_test(duration: u64) {
     if duration == 0 {
         return
     }
@@ -37,7 +39,7 @@ fn cpu_test(config: Config, duration: u64) {
     let start = Instant::now();
 
     while start.elapsed().as_secs() < duration {
-        println!("CPU Test loop");
+        info!("CPU Test loop");
         let iteration_start = Instant::now();
         let mut iterations = 0;
 
@@ -46,16 +48,14 @@ fn cpu_test(config: Config, duration: u64) {
             iterations += 1;
             let _a = s + 1; // make sure s gets not optimized away
         }
-        if config.verbose {
-            println!("Iterations done, {:?}", iteration_start.elapsed());
-        }
+        debug!("Iterations done, {:?}", iteration_start.elapsed());
 
         // Sleep to ensure constant workload
         let elapsed = iteration_start.elapsed();
         if elapsed < Duration::from_secs(1) {
             thread::sleep(Duration::from_secs(1) - elapsed);
         } else {
-            println!("CPU Test too long, does not fit in one second");
+            error!("CPU Test too long, does not fit in one second");
         }
     }
 }
@@ -111,7 +111,7 @@ fn ram_test(duration: u64, size_mb: usize) {
         if elapsed < Duration::from_secs(1) {
             thread::sleep(Duration::from_secs(1) - elapsed);
         } else {
-            println!("RAM Test too long, does not fit in one second");
+            error!("RAM Test too long, does not fit in one second");
 
         }
     }
@@ -119,15 +119,19 @@ fn ram_test(duration: u64, size_mb: usize) {
 
 fn gpu_test(duration: u64) {
     // Placeholder for a GPU test using wgpu or other libraries
-    println!("GPU test started for {} seconds. (Implement as needed)", duration);
+    info!("GPU test started for {} seconds. (Implement as needed)", duration);
     thread::sleep(Duration::from_secs(duration));
 }
 
 fn main() {
+    dotenv().ok();
     let args = Args::parse();
     let config: Config = args.into();
+    env_logger::init();
 
-    let args: Vec<String> = env::args().collect();
+    if config.verbose {
+        std::env::set_var("RUST_LOG", "debug");
+    }
 
     let cpu_duration = config.cpu_secs;
     let disk_duration = 0; // seconds
@@ -135,19 +139,19 @@ fn main() {
     let gpu_duration = 0; // seconds
     let ram_test_size_mb = 0; // MB
 
-    println!("Starting load scenario...");
+    info!("Starting load scenario...");
 
-    println!("Running CPU test for {} seconds", cpu_duration);
-    cpu_test(config, cpu_duration);
+    info!("Running CPU test for {} seconds", cpu_duration);
+    cpu_test(cpu_duration);
 
-    println!("Running Disk I/O test...");
+    info!("Running Disk I/O test...");
     disk_io_test("testfile.tmp", disk_duration);
 
-    println!("Running RAM test...");
+    info!("Running RAM test...");
     ram_test(ram_duration, ram_test_size_mb);
 
-    println!("Running GPU test...");
+    info!("Running GPU test...");
     gpu_test(gpu_duration);
 
-    println!("Load scenario complete.");
+    info!("Load scenario complete.");
 }
