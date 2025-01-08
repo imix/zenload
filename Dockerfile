@@ -24,6 +24,7 @@ COPY --from=xx /usr/bin/ /usr/bin/
 
 # Install host build dependencies.
 RUN apk add --no-cache clang lld musl-dev git file
+RUN mkdir /artefacts
 
 # This is the architecture you’re building for, which is passed in by the builder.
 # Placing it here allows the previous steps to be cached across architectures.
@@ -49,8 +50,8 @@ RUN --mount=type=bind,source=src,target=src \
     <<EOF
 set -e
 xx-cargo build --locked --release --target-dir ./target
-cp ./target/$(xx-cargo --print-target-triple)/release/$APP_NAME /zenload
-xx-verify /zenload
+cp ./target/$(xx-cargo --print-target-triple)/release/$APP_NAME /artefacts/zenload
+xx-verify /artefacts/zenload
 EOF
 
 ################################################################################
@@ -79,7 +80,7 @@ RUN adduser \
 USER appuser
 
 # Copy the executable from the "build" stage.
-COPY --from=build /zenload /bin/
+COPY --from=build /artefacts/zenload /bin/
 
 # Expose the port that the application listens on.
 EXPOSE 1024
