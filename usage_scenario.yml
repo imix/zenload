@@ -4,7 +4,7 @@ author: Stefan Aeschbacher
 description: runs zenload for 5 seconds with a cpu test
 architecture: linux
 services:
-  zenload:
+  zenload-container:
     image: saeschbacher/zenload
     setup-commands:
       - sleep 20
