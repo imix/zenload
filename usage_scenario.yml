@@ -3,11 +3,8 @@ name: Run zenload
 author: Stefan Aeschbacher
 description: runs zenload for 5 seconds with a cpu test
 architecture: linux
-services:
-  zenload-container:
-    build:
-      context: .
-      target: final
+
+compose-file: !include compose.yml
 
 flow:
   - name: CPU-Load
