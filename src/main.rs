@@ -2,7 +2,6 @@ use clap::Parser;
 use dotenv::dotenv;
 use log::{debug, error, info, trace, warn};
 use rand::Rng;
-use std::env;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::thread;
@@ -35,6 +34,7 @@ fn cpu_test(duration: u64) {
     if duration == 0 {
         return;
     }
+    info!("Running CPU test for {} seconds", duration);
     let target_iterations_per_sec = 1_000_000; // Fixed workload
     let start = Instant::now();
 
@@ -43,12 +43,14 @@ fn cpu_test(duration: u64) {
         let iteration_start = Instant::now();
         let mut iterations = 0;
 
+        let mut a: u64 = 0;
         while iterations < target_iterations_per_sec {
-            let s: u64 = (1..100).map(|x| x * x).sum();
+            let s: u64 = (1..100).map(|x| iterations / x).sum();
+            a += s;
             iterations += 1;
-            let _a = s + 1; // make sure s gets not optimized away
         }
         debug!("Iterations done, {:?}", iteration_start.elapsed());
+        trace!("Got, {:?}", a); // make sure the result is not optimized away
 
         // Sleep to ensure constant workload
         let elapsed = iteration_start.elapsed();
@@ -64,6 +66,7 @@ fn disk_io_test(file_path: &str, duration: u64) {
     if duration == 0 {
         return;
     }
+    info!("Running Disk I/O test for {} seconds", duration);
     let start = Instant::now();
     let buffer_size = 1024 * 1024; // 1 MB buffer
     let target_writes_per_sec = 10; // Fixed workload
@@ -97,6 +100,7 @@ fn ram_test(duration: u64, size_mb: usize) {
     if duration == 0 {
         return;
     }
+    info!("Running RAM test for {} seconds", duration);
     let target_allocations_per_sec = 10; // Fixed workload
     let buffer_size = size_mb * 1024 * 1024;
     let start = Instant::now();
@@ -122,6 +126,7 @@ fn ram_test(duration: u64, size_mb: usize) {
 
 fn gpu_test(duration: u64) {
     // Placeholder for a GPU test using wgpu or other libraries
+    info!("Running GPU test...");
     info!(
         "GPU test started for {} seconds. (Implement as needed)",
         duration
@@ -150,16 +155,12 @@ fn main() {
 
     info!("Starting load scenario...");
 
-    info!("Running CPU test for {} seconds", cpu_duration);
     cpu_test(cpu_duration);
 
-    info!("Running Disk I/O test...");
     disk_io_test("testfile.tmp", disk_duration);
 
-    info!("Running RAM test...");
     ram_test(ram_duration, ram_test_size_mb);
 
-    info!("Running GPU test...");
     gpu_test(gpu_duration);
 
     info!("Load scenario complete.");
