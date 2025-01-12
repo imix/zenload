@@ -8,11 +8,13 @@ services:
     image: saeschbacher/zenload
     setup-commands:
       - sleep 20
+    volumes:
+      - ./zenario.yml:/zenario.yml
 
 flow:
   - name: CPU-Load
     container: zenload-container
     commands:
       - type: console
-        command: zenload -v -c 5
+        command: zenload -f /zenario.yml
         note: Starting zenload

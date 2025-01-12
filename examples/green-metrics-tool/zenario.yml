@@ -1,0 +1,10 @@
+name: example zenario
+description: zenario that shows the different loads that can be generated
+
+# sequence of loads: cpu, disk
+load_zenario:
+  - name: "CPU Test - Integer Operations"
+    type: "cpu"
+    duration: 5
+    operation: "int24"
+    description: "Perform intensive integer calculations for 5 seconds."
