@@ -9,13 +9,14 @@ pub fn cpu_test(duration: u64, test_type: String) {
     info!("Running CPU test for {} seconds", duration);
     let start = Instant::now();
 
+    let tt = test_type.as_str();
     while start.elapsed().as_secs() < duration {
         info!("CPU Test loop");
         let iteration_start = Instant::now();
 
-        let res = match test_type.as_str() {
+        let res = match tt {
             "int24" => generate_integer_load_2024(),
-            _ => error!("Unknown CPU test type: {}", test_type),
+            _ => Err(CPUError::UnknownTestType),
         };
 
         debug!("Iterations done, {:?}", iteration_start.elapsed());
@@ -31,7 +32,14 @@ pub fn cpu_test(duration: u64, test_type: String) {
     }
 }
 
-fn generate_integer_load_2024() {
+#[derive(Debug)]
+pub enum CPUError {
+    TookTooLong,
+    UnknownTestType,
+    Other(String),
+}
+
+fn generate_integer_load_2024() -> Result<u64, CPUError> {
     let mut iterations = 0;
     let mut a: u64 = 0;
     let target_iterations_per_sec = 1_000_000; // Fixed workload
@@ -40,4 +48,5 @@ fn generate_integer_load_2024() {
         a += s;
         iterations += 1;
     }
+    Ok(a)
 }
