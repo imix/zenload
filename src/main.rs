@@ -7,6 +7,7 @@ use std::io::Write;
 use std::thread;
 use std::time::{Duration, Instant};
 
+mod config;
 mod cpu;
 
 #[derive(Parser, Debug)]
@@ -15,19 +16,23 @@ struct Args {
     verbose: bool,
     #[clap(short, long, default_value = "5")]
     cpu_secs: u64,
+    #[clap(short, long)]
+    file: String,
 }
 
 #[derive(Debug)]
-struct Config {
+struct ConfigArgs {
     verbose: bool,
     cpu_secs: u64,
+    file: String,
 }
 
-impl From<Args> for Config {
+impl From<Args> for ConfigArgs {
     fn from(args: Args) -> Self {
-        Config {
+        ConfigArgs {
             verbose: args.verbose,
             cpu_secs: args.cpu_secs,
+            file: args.file,
         }
     }
 }
@@ -106,10 +111,10 @@ fn gpu_test(duration: u64) {
 
 fn main() {
     let args = Args::parse();
-    let config: Config = args.into();
+    let config_args: ConfigArgs = args.into();
 
     dotenv().ok();
-    if config.verbose {
+    if config_args.verbose {
         env_logger::builder()
             .filter_level(log::LevelFilter::Debug)
             .init();
@@ -117,21 +122,34 @@ fn main() {
         env_logger::init();
     }
 
-    let cpu_duration = config.cpu_secs;
-    let disk_duration = 0; // seconds
-    let ram_duration = 0; // seconds
-    let gpu_duration = 0; // seconds
-    let ram_test_size_mb = 0; // MB
+    // load zenario from yml file
+    let zenario = config::load_zenario(&config_args.file).expect("Failed to load zenario");
 
     info!("Starting load scenario...");
-
-    cpu::cpu_test(cpu_duration);
-
-    disk_io_test("testfile.tmp", disk_duration);
-
-    ram_test(ram_duration, ram_test_size_mb);
-
-    gpu_test(gpu_duration);
+    for test in zenario.load_zenario {
+        match test {
+            config::LoadZenario::Test(t) => {
+                println!("Running test: {}", t.name);
+                match t.test_type.as_str() {
+                    "cpu" => cpu::cpu_test(
+                        t.duration.expect("duration is mandatory"),
+                        t.operation.expect("operation is mandatory"),
+                    ),
+                    // "disk_io" => disk_io_test(&t.file_path.unwrap(), disk_duration),
+                    // "ram" => ram_test(ram_duration, t.data_size.unwrap_or(0) as usize),
+                    // "gpu" => gpu_test(gpu_duration),
+                    _ => error!("Unknown test type: {}", t.test_type),
+                }
+            }
+            config::LoadZenario::ParallelGroup { parallel_group } => {
+                println!("Running parallel tests:");
+                for t in parallel_group {
+                    println!(" - {}", t.name);
+                    // Handle parallel test
+                }
+            }
+        }
+    }
 
     info!("Load scenario complete.");
 }
