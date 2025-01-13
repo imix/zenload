@@ -2,13 +2,12 @@ use clap::Parser;
 use dotenv::dotenv;
 use log::{error, info};
 use rand::Rng;
-use std::fs::OpenOptions;
-use std::io::Write;
 use std::thread;
 use std::time::{Duration, Instant};
 
 mod config;
 mod cpu;
+mod disk;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -35,40 +34,6 @@ impl From<Args> for ConfigArgs {
             file: args.file,
         }
     }
-}
-
-fn disk_io_test(file_path: &str, duration: u64) {
-    if duration == 0 {
-        return;
-    }
-    info!("Running Disk I/O test for {} seconds", duration);
-    let start = Instant::now();
-    let buffer_size = 1024 * 1024; // 1 MB buffer
-    let target_writes_per_sec = 10; // Fixed workload
-
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .open(file_path)
-        .unwrap();
-
-    while start.elapsed().as_secs() < duration {
-        let iteration_start = Instant::now();
-        for _ in 0..target_writes_per_sec {
-            let data = vec![0u8; buffer_size];
-            file.write_all(&data).unwrap();
-            file.sync_all().unwrap();
-        }
-
-        // Sleep to ensure constant workload
-        let elapsed = iteration_start.elapsed();
-        if elapsed < Duration::from_secs(1) {
-            thread::sleep(Duration::from_secs(1) - elapsed);
-        }
-    }
-
-    // Cleanup
-    std::fs::remove_file(file_path).unwrap();
 }
 
 fn ram_test(duration: u64, size_mb: usize) {
@@ -135,7 +100,10 @@ fn main() {
                         t.duration.expect("duration is mandatory"),
                         t.operation.expect("operation is mandatory"),
                     ),
-                    // "disk_io" => disk_io_test(&t.file_path.unwrap(), disk_duration),
+                    "disk" => disk::disk_io_test(
+                        &t.file_path.unwrap(),
+                        t.duration.expect("msg is mandatory"),
+                    ),
                     // "ram" => ram_test(ram_duration, t.data_size.unwrap_or(0) as usize),
                     // "gpu" => gpu_test(gpu_duration),
                     _ => error!("Unknown test type: {}", t.test_type),

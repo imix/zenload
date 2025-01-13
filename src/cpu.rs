@@ -16,7 +16,7 @@ pub fn cpu_test(duration: u64, test_type: String) {
 
         let res = match tt {
             "int24" => generate_integer_load_2024(),
-            _ => Err(CPUError::UnknownTestType),
+            _ => Err(CPUError::UnknownTestType(test_type.to_string())),
         };
 
         debug!("Iterations done, {:?}", iteration_start.elapsed());
@@ -35,7 +35,7 @@ pub fn cpu_test(duration: u64, test_type: String) {
 #[derive(Debug)]
 pub enum CPUError {
     TookTooLong,
-    UnknownTestType,
+    UnknownTestType(String),
     Other(String),
 }
 
