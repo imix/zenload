@@ -16,5 +16,5 @@ flow:
     container: zenload-container
     commands:
       - type: console
-        command: zenload -f /zenario.yml
+        command: zenload -f /zenario.yml -v
         note: Starting zenload

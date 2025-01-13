@@ -8,3 +8,11 @@ load_zenario:
     duration: 5
     operation: "int24"
     description: "Perform intensive integer calculations for 5 seconds."
+
+  - name: "Disk Test - write"
+    type: "disk"
+    duration: 5
+    operation: "write24"
+    description: "Perform intensive write operations 5 seconds."
+    file_path: "/tmp/test_file"
+    data_size: "10MB"
