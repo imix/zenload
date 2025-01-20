@@ -1,5 +1,6 @@
 use log::{debug, error, info, trace};
 use rand::{thread_rng, Rng};
+use std::mem::offset_of;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -13,16 +14,15 @@ pub fn ram_test(duration: u64, size_mb: usize) {
 
     let source_data = generate_random_data(buffer_size);
 
-    let mut offset = 0;
     while start.elapsed().as_secs() < duration {
         let iteration_start = Instant::now();
-        // Perform multiple tests starting from different offsets
-        match test_memory_with_offset(&source_data, buffer_size, offset) {
-            Ok(_) => trace!("Memory test passed starting at offset {}.", offset),
-            Err(e) => panic!("Memory test failed at offset {}: {}", offset, e),
+        for offset in 0..10 {
+            match test_memory_with_offset(&source_data, buffer_size, offset) {
+                Ok(_) => trace!("Memory test passed starting at offset {}.", offset),
+                Err(e) => panic!("Memory test failed at offset {}: {}", offset, e),
+            }
         }
-
-        offset += 1;
+        debug!("Iterations done, {:?}", iteration_start.elapsed());
 
         // Sleep to ensure constant workload
         let elapsed = iteration_start.elapsed();
