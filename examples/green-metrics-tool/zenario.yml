@@ -16,3 +16,11 @@ load_zenario:
     description: "Perform intensive write operations 5 seconds."
     file_path: "/tmp/test_file"
     data_size: "10MB"
+
+  - name: "RAM Test - read"
+    type: "ram"
+    duration: 5
+    operation: "read"
+    description: "Perform read operations on ram."
+    file_path: "/tmp/test_file"
+    data_size: "10"
