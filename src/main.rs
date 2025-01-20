@@ -1,13 +1,13 @@
 use clap::Parser;
 use dotenv::dotenv;
 use log::{error, info};
-use rand::Rng;
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 mod config;
 mod cpu;
 mod disk;
+mod ram;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -32,34 +32,6 @@ impl From<Args> for ConfigArgs {
             verbose: args.verbose,
             cpu_secs: args.cpu_secs,
             file: args.file,
-        }
-    }
-}
-
-fn ram_test(duration: u64, size_mb: usize) {
-    if duration == 0 {
-        return;
-    }
-    info!("Running RAM test for {} seconds", duration);
-    let target_allocations_per_sec = 10; // Fixed workload
-    let buffer_size = size_mb * 1024 * 1024;
-    let start = Instant::now();
-
-    while start.elapsed().as_secs() < duration {
-        let iteration_start = Instant::now();
-        for _ in 0..target_allocations_per_sec {
-            let mut vec = vec![0u8; buffer_size];
-            for i in 0..vec.len() {
-                vec[i] = rand::thread_rng().gen();
-            }
-        }
-
-        // Sleep to ensure constant workload
-        let elapsed = iteration_start.elapsed();
-        if elapsed < Duration::from_secs(1) {
-            thread::sleep(Duration::from_secs(1) - elapsed);
-        } else {
-            error!("RAM Test too long, does not fit in one second");
         }
     }
 }
@@ -102,9 +74,17 @@ fn main() {
                     ),
                     "disk" => disk::disk_io_test(
                         &t.file_path.unwrap(),
-                        t.duration.expect("msg is mandatory"),
+                        t.duration.expect("duration is mandatory"),
                     ),
-                    // "ram" => ram_test(ram_duration, t.data_size.unwrap_or(0) as usize),
+                    "ram" => ram::ram_test(
+                        t.duration.expect("duration is mandatory"),
+                        // read t.data_size String as usize
+                        t.data_size
+                            .expect("size is mandatory")
+                            .trim()
+                            .parse::<usize>()
+                            .expect("Invalid size"),
+                    ),
                     // "gpu" => gpu_test(gpu_duration),
                     _ => error!("Unknown test type: {}", t.test_type),
                 }

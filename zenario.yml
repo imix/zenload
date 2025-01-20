@@ -7,33 +7,27 @@ load_zenario:
     type: "cpu"
     duration: 5
     operation: "int24"
-    description: "Perform intensive integer calculations for 5 seconds."
-
-  - name: "CPU Test - Floating Point Operations"
-    type: "cpu"
-    duration: 5
-    operation: "floating_point"
-    description: "Perform intensive floating-point calculations for 5 seconds."
+    description: "Perform intensive integer calculations."
 
   - name: "Disk Test - Read Operations"
     type: "disk"
     duration: 5
     operation: "read"
-    description: "Perform intensive disk read operations for 15 seconds."
+    description: "Perform intensive disk read operations."
     file_path: "/tmp/test_file" # Specify the file for read operations
 
   - name: "Disk Test - Write Operations"
     type: "disk"
     duration: 5
     operation: "write"
-    description: "Perform intensive disk write operations for 15 seconds."
+    description: "Perform intensive disk write operations."
     file_path: "/tmp/test_file"
     data_size: "10MB" # Specify the amount of data to write
 
-  - name: "Disk Test - Alternate Read/Write Operations"
-    type: "disk"
+  - name: "RAM Test - read"
+    type: "ram"
     duration: 5
-    operation: "alternate"
-    description: "Perform alternating read and write operations on disk for 20 seconds."
+    operation: "read"
+    description: "Perform read operations on ram."
     file_path: "/tmp/test_file"
-    data_size: "10MB"
+    data_size: "10"
