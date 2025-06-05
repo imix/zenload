@@ -7,7 +7,7 @@ services:
   zenload-container:
     image: saeschbacher/zenload
     setup-commands:
-      - sleep 20
+      - command: sleep 20
     volumes:
       - ./zenario.yml:/zenario.yml
 
